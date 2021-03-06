@@ -3,3 +3,6 @@
 
 # Exclude .idea files
 .idea/*
+
+# Exclude Mac OS metadata
+.DS_Store
