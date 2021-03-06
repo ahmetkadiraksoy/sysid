@@ -18,6 +18,8 @@ public class GA {
         ArrayList<String> solutions = new ArrayList<>();
         String solution;
 
+        // test
+
         while (true) {
             GAIndividual fittest = myPop.getFittest();
             solution = fittest.toString();
@@ -108,8 +110,6 @@ public class GA {
                         System.out.println(ANSI_BLUE + line.split(",")[0] + ANSI_RESET);
                 i++;
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
