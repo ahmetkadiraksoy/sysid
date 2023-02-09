@@ -78,7 +78,7 @@ public class ClassifyGroup {
                 if (i > 0 && i % 1000 == 0)
                     System.out.println(i);
 
-                // get the protocols that exist in the packet (frame.protocols field)
+                // Get the protocols that exist in the packet (frame.protocols field)
                 if (verbose)
                     System.out.println("\t\tProtocols in the packet: " + testdata.get(i).stringValue(testdata.numAttributes() - 2));
                 String[] packet_protocols = testdata.get(i).stringValue(testdata.numAttributes() - 2).split(":");
@@ -208,6 +208,7 @@ public class ClassifyGroup {
                     System.out.println(temp.weight);
                     System.out.println(temp.predicted_label);
                 }
+//System.out.println(testdata2.instance(i).toString());
             }
         } catch (Exception e) {
             e.printStackTrace();

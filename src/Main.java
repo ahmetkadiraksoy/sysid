@@ -126,80 +126,98 @@ public class Main {
         }
 
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-w") || args[i].equals("--workfolder")) {
-                work_folder = args[i+1];
-                i++;
-            }
-            else if (args[i].equals("-we") || args[i].equals("--weights")) {
-                weights = args[i+1];
-                i++;
-            }
-            else if (args[i].equals("-p") || args[i].equals("--protocol")) {
-                protocol = args[i+1];
-                i++;
-            }
-            else if (args[i].equals("-pp") || args[i].equals("--packet-protocol")) {
-                protocolToFilter = args[i+1];
-                i++;
-            }
-            else if (args[i].equals("-r") || args[i].equals("--run")) {
-                run_no = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-pop") || args[i].equals("--population")) {
-                population_ga = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-m") || args[i].equals("--mode")) {
-                mode = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-tg") || args[i].equals("--threshold-group")) {
-                threshold_group = Double.parseDouble(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-c") || args[i].equals("--classifier")) {
-                classifier = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-co") || args[i].equals("--config")) {
-                config_path = args[i+1];
-                i++;
-            }
-            else if (args[i].equals("-h") || args[i].equals("--help")) {
-                help();
-                System.exit(0);
-            }
-            else if (args[i].equals("-vb") || args[i].equals("--verbose")) {
-                verbose = true;
-            }
-            else if (args[i].equals("-k") || args[i].equals("--k")) {
-                k = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-i") || args[i].equals("--iteration")) {
-                iteration = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-t") || args[i].equals("--threads")) {
-                max_threads = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-g") || args[i].equals("--group")) {
-                group = Integer.parseInt(args[i+1]);
-                i++;
-            }
-            else if (args[i].equals("-os") || args[i].equals("--os-name")) {
-                class_os = args[i+1];
-                i++;
-            }
-            else if (args[i].equals("-wp") || args[i].equals("--weka-path")) {
-                weka_path = args[i+1];
-                i++;
-            }
-            else {
-                System.out.println(ANSI_RED + "Unknown parameter '" + args[i] + "' " + ANSI_GREEN + "Type -h to see the help menu." + ANSI_RESET);
-                System.exit(0);
+            switch (args[i]) {
+                case "-w":
+                case "--workfolder":
+                    work_folder = args[i + 1];
+                    i++;
+                    break;
+                case "-we":
+                case "--weights":
+                    weights = args[i + 1];
+                    i++;
+                    break;
+                case "-p":
+                case "--protocol":
+                    protocol = args[i + 1];
+                    i++;
+                    break;
+                case "-pp":
+                case "--packet-protocol":
+                    protocolToFilter = args[i + 1];
+                    i++;
+                    break;
+                case "-r":
+                case "--run":
+                    run_no = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-pop":
+                case "--population":
+                    population_ga = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-m":
+                case "--mode":
+                    mode = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-tg":
+                case "--threshold-group":
+                    threshold_group = Double.parseDouble(args[i + 1]);
+                    i++;
+                    break;
+                case "-c":
+                case "--classifier":
+                    classifier = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-co":
+                case "--config":
+                    config_path = args[i + 1];
+                    i++;
+                    break;
+                case "-h":
+                case "--help":
+                    help();
+                    System.exit(0);
+                case "-vb":
+                case "--verbose":
+                    verbose = true;
+                    break;
+                case "-k":
+                case "--k":
+                    k = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-i":
+                case "--iteration":
+                    iteration = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-t":
+                case "--threads":
+                    max_threads = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-g":
+                case "--group":
+                    group = Integer.parseInt(args[i + 1]);
+                    i++;
+                    break;
+                case "-os":
+                case "--os-name":
+                    class_os = args[i + 1];
+                    i++;
+                    break;
+                case "-wp":
+                case "--weka-path":
+                    weka_path = args[i + 1];
+                    i++;
+                    break;
+                default:
+                    System.out.println(ANSI_RED + "Unknown parameter '" + args[i] + "' " + ANSI_GREEN + "Type -h to see the help menu." + ANSI_RESET);
+                    System.exit(0);
             }
         }
 
@@ -244,9 +262,14 @@ public class Main {
             case 1:
                 // Find non-null features
                 findNonNullFeatures(protocolToFilter,
+                        no_of_os_instances_train,
+                        no_of_os_instances_test,
+                        protocol,
+                        classes,
                         tshark_features_list_path,
                         tsharkselected_features_list_path,
                         pcapnames_train,
+                        pcapnames_test,
                         work_folder,
                         max_threads,
                         useDerivedFeatures,
@@ -580,7 +603,7 @@ public class Main {
 
             for (int i = 0; i < no_of_os_instances; i++)
                 for (int j = 0; j < classes.size(); j++) // for each OS
-                    outfile.add(new BufferedWriter(new FileWriter(new File(folder + "/"+ filename_prefix + "_" + classes.get(j) + "_" + (i+1) + "_balanced"), true)));
+                    outfile.add(new BufferedWriter(new FileWriter(folder + "/"+ filename_prefix + "_" + classes.get(j) + "_" + (i+1) + "_balanced", true)));
 
             // determine the most number of packets available in files
             int no_of_maximum_packets_in_a_file = 0;
@@ -599,25 +622,37 @@ public class Main {
             for (int i = 0; i < no_of_os_instances; i++) { // for each instance
                 for (int j = 0; j < classes.size(); j++) { // for each OS
                     String current_file = folder + "/"+ filename_prefix + "_" + classes.get(j) + "_" + (i+1) + "_uniq";
-                    if (new File(current_file).isFile()) { // if file exists
-                        int no_of_packets_written = 0;
 
-                        while (no_of_packets_written < no_of_maximum_packets_in_a_file) {
-                            BufferedReader reader = new BufferedReader(new FileReader(current_file));
-
-                            String line;
-                            while (((line = reader.readLine()) != null) && (no_of_packets_written < no_of_maximum_packets_in_a_file)) {
-                                outfile.get(outfile_array_pointer).write(line);
-                                outfile.get(outfile_array_pointer).newLine();
-                                outfile.get(outfile_array_pointer).flush();
-                                no_of_packets_written++;
-                            }
-
-                            // Close file stream
-                            reader.close();
-                        }
-                        new File(current_file).delete();
+                    // If file does not exist, give error
+                    if (!new File(current_file).isFile()) {
+                        System.out.println("File: " + current_file + " does not exist!");
+                        System.exit(0);
                     }
+
+                    // If file empty, give error
+                    if (new File(current_file).length() == 0) {
+                        System.out.println("File: " + current_file + " is empty!");
+                        System.exit(0);
+                    }
+
+                    int no_of_packets_written = 0;
+
+                    while (no_of_packets_written < no_of_maximum_packets_in_a_file) {
+                        BufferedReader reader = new BufferedReader(new FileReader(current_file));
+
+                        String line;
+                        while (((line = reader.readLine()) != null) && (no_of_packets_written < no_of_maximum_packets_in_a_file)) {
+                            outfile.get(outfile_array_pointer).write(line);
+                            outfile.get(outfile_array_pointer).newLine();
+                            outfile.get(outfile_array_pointer).flush();
+                            no_of_packets_written++;
+                        }
+
+                        // Close file stream
+                        reader.close();
+                    }
+                    new File(current_file).delete();
+
                     outfile_array_pointer++;
                 }
             }
@@ -695,7 +730,7 @@ public class Main {
                 String pcap_file = work_folder + "/" + pcap_folder + "/" + pcapnames.get(j);
                 String current_class = pcapnames.get(j);
 
-                new ExtractFeaturesThread(protocol_filter, latch, current_class, protocol_file_path, tshark_attributes, source_file, pcap_file, useDerivedFeatures, derivedFeaturesSuffixConsider, derivedFeaturesSuffixIgnore, derivedFeaturesSuffixInclude).start();
+                new ExtractFeaturesThread(protocol_filter, protocol, latch, current_class, protocol_file_path, tshark_attributes, source_file, pcap_file, useDerivedFeatures, derivedFeaturesSuffixConsider, derivedFeaturesSuffixIgnore, derivedFeaturesSuffixInclude).start();
             }
 
             latch.await(); // Current thread will get notified if all threads are done and thread will resume from wait() mode.
@@ -703,7 +738,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        // Balance the packets
+        // Balance the packets so that classifier doesn't rely on results from packets in one class (99 correct windows 1 incorrect linux doesn't mean 99% accuracy)
         balance_packet_count(protocol_file_path, classes, no_of_os_instances, filename_prefix);
 
         // Divide the genetic files
@@ -1004,43 +1039,79 @@ public class Main {
     ////////////////////////////////////////////////
     // Determines the features which are non-null //
     ////////////////////////////////////////////////
-    public static void findNonNullFeatures(String protocolToFilter, String tshark_features_list_path, String tsharkselected_features_list_path, ArrayList<String> pcapnames_train, String work_folder, int max_threads, boolean useDerivedFeatures, boolean useStreamFeatures, ArrayList<String> derivedFeaturesSuffixConsider, ArrayList<String> derivedFeaturesSuffixIgnore, ArrayList<String> derivedFeaturesSuffixInclude) {
+    public static void findNonNullFeatures(String protocolToFilter, int no_of_os_instances_train, int no_of_os_instances_test, String protocol, ArrayList<String> classes, String tshark_features_list_path, String tsharkselected_features_list_path, ArrayList<String> pcapnames_train, ArrayList<String> pcapnames_test, String work_folder, int max_threads, boolean useDerivedFeatures, boolean useStreamFeatures, ArrayList<String> derivedFeaturesSuffixConsider, ArrayList<String> derivedFeaturesSuffixIgnore, ArrayList<String> derivedFeaturesSuffixInclude) {
         // Create the output folder if it doesn't already exist
         new File(work_folder + "/TsharkSelected/").mkdirs();
 
-        try {
-            // Get the number of classes
-            int no_of_features = get_no_of_lines(tshark_features_list_path);
-            ArrayList<String> fields = get_lines_from_file(tshark_features_list_path);
-            BufferedWriter output_text = new BufferedWriter(new FileWriter(new File(tsharkselected_features_list_path), false));
+        // Check if all pcap files have packets for the current protocol
+        boolean empty = false;
+        String [] protocols = protocol.split("_");
+        for (int k = 0; k < protocols.length; k++) {
+            String protocol_current = protocols[k];
 
-            int executed = 0;
-
-            while (executed < no_of_features) {
-                ExecutorService executor = Executors.newFixedThreadPool(Math.min(max_threads, no_of_features - executed));
-
-                for (int i = executed; i < (executed + Math.min(max_threads, no_of_features - executed)); i++)
-                    executor.execute(new FindNonNullFeaturesThread(protocolToFilter, fields.get(i), pcapnames_train, work_folder, output_text, i+1, no_of_features, useStreamFeatures)); // calling execute method of ExecutorService
-
-                executor.shutdown();
-
-                while (!executor.isTerminated()) {}
-
-                executed += Math.min(max_threads, no_of_features - executed);
+            for (int i = 0; i < no_of_os_instances_train; i++) {
+                for (int j = 0; j < classes.size(); j++) {
+                    String command = "tshark -n -r " + work_folder + "/pcap_files/" + classes.get(j) + "_" + (i + 1) + " -Y '" + protocol_current + "'";
+                    if (new ExecuteSystemCommand().execute(command, false).size() == 0) {
+                        empty = true;
+                        break;
+                    }
+                }
+                if (empty)
+                    break;
             }
 
-            output_text.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            if (!empty) {
+                for (int i = 0; i < no_of_os_instances_test; i++) {
+                    for (int j = 0; j < classes.size(); j++) {
+                        String command = "tshark -n -r " + work_folder + "/pcap_files_test/" + classes.get(j) + "_" + (i + 1) + " -Y '" + protocol_current + "'";
+                        if (new ExecuteSystemCommand().execute(command, false).size() == 0) {
+                            empty = true;
+                            break;
+                        }
+                    }
+                    if (empty)
+                        break;
+                }
+            }
+
+            if (empty)
+                break;
         }
 
-        // Add analysis features to TsharkSelected
-        if (useDerivedFeatures) {
-            createAnalysisFile(tsharkselected_features_list_path, tsharkselected_features_list_path + "_analysis", derivedFeaturesSuffixConsider, derivedFeaturesSuffixIgnore, derivedFeaturesSuffixInclude);
-            copy_file(tsharkselected_features_list_path, tsharkselected_features_list_path + "_original");
-            delete_file(tsharkselected_features_list_path);
-            copy_file(tsharkselected_features_list_path + "_analysis", tsharkselected_features_list_path);
-            delete_file(tsharkselected_features_list_path + "_analysis");
+        if (!empty) {
+            try {
+                // Get the number of classes
+                int no_of_features = get_no_of_lines(tshark_features_list_path);
+                ArrayList<String> fields = get_lines_from_file(tshark_features_list_path);
+                BufferedWriter output_text = new BufferedWriter(new FileWriter((tsharkselected_features_list_path), false));
+
+                int executed = 0;
+
+                while (executed < no_of_features) {
+                    ExecutorService executor = Executors.newFixedThreadPool(Math.min(max_threads, no_of_features - executed));
+                    for (int i = executed; i < (executed + Math.min(max_threads, no_of_features - executed)); i++)
+                        executor.execute(new FindNonNullFeaturesThread(classes, no_of_os_instances_train, no_of_os_instances_test, protocolToFilter, protocol, fields.get(i), pcapnames_train, pcapnames_test, work_folder, output_text, i + 1, no_of_features, useStreamFeatures)); // calling execute method of ExecutorService
+                    executor.shutdown();
+                    while (!executor.isTerminated()) {
+                    }
+
+                    executed += Math.min(max_threads, no_of_features - executed);
+                }
+
+                output_text.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // Add analysis features to TsharkSelected
+            if (useDerivedFeatures) {
+                createAnalysisFile(tsharkselected_features_list_path, tsharkselected_features_list_path + "_analysis", derivedFeaturesSuffixConsider, derivedFeaturesSuffixIgnore, derivedFeaturesSuffixInclude);
+                copy_file(tsharkselected_features_list_path, tsharkselected_features_list_path + "_original");
+                delete_file(tsharkselected_features_list_path);
+                copy_file(tsharkselected_features_list_path + "_analysis", tsharkselected_features_list_path);
+                delete_file(tsharkselected_features_list_path + "_analysis");
+            }
         }
     }
 
@@ -1048,12 +1119,7 @@ public class Main {
     public static ArrayList<String> get_files_in_folder(String folder) {
         ArrayList<String> results = new ArrayList<>();
 
-        File[] files = new File(folder).listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return !file.isHidden();
-            }
-        });
+        File[] files = new File(folder).listFiles(file -> !file.isHidden());
 
         // If this pathname does not denote a directory, then listFiles() returns null.
         for (File file : files)
@@ -1067,12 +1133,7 @@ public class Main {
     public static ArrayList<String> get_number_of_OSes(String folder) {
         ArrayList<String> results = new ArrayList<>();
 
-        File[] files = new File(folder).listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return !file.isHidden();
-            }
-        });
+        File[] files = new File(folder).listFiles(file -> !file.isHidden());
 
         // If this pathname does not denote a directory, then listFiles() returns null.
         for (File file : files)
@@ -1080,250 +1141,6 @@ public class Main {
                 results.add(file.getName().split("_")[0]);
 
         return (ArrayList<String>) results.stream().distinct().collect(Collectors.toList()); // return unique list
-    }
-}
-
-class FindNonNullFeaturesThread extends Thread {
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_BLACK = "\u001B[30m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
-    public static final String ANSI_WHITE = "\u001B[37m";
-    private Thread t;
-    private String threadName;
-    private String packetProtocol;
-    private String current_field;
-    private int no_of_classes;
-    private ArrayList<String> classes;
-    private String work_folder;
-    private BufferedWriter output_text;
-    private int pos_of_current_field;
-    private int no_of_fields;
-    private boolean useStreamFeatures;
-
-    FindNonNullFeaturesThread(String protocolToFilter, String current_field_input, ArrayList<String> classes, String work_folder, BufferedWriter output_text, int pos_of_current_field, int no_of_fields, boolean useStreamFeatures) {
-        this.current_field = current_field_input;
-        this.no_of_classes = classes.size();
-        this.classes = classes;
-        this.work_folder = work_folder;
-        this.output_text = output_text;
-        this.pos_of_current_field = pos_of_current_field;
-        this.no_of_fields = no_of_fields;
-        this.packetProtocol = protocolToFilter;
-        this.useStreamFeatures = useStreamFeatures;
-
-        threadName = current_field.split(",")[0];
-    }
-
-    // check this
-    public void run() {
-        ArrayList<String> output = new ArrayList<>();
-        boolean write_to_file = false;
-        String featureName = current_field.split(",")[0];
-
-        if (current_field.split("_")[0].equals("stream") && useStreamFeatures)
-            write_to_file = true;
-        else {
-            // For each class (OS), get the feature contents
-            for (int i = 0; i < no_of_classes; i++) {
-                String current_os = classes.get(i);
-
-                if (packetProtocol == null)
-                    output.addAll(new ExecuteSystemCommand().execute("tshark -n -r " + work_folder + "/pcap_files/" + current_os + " -Tfields -e " + featureName, false));
-                else
-                    output.addAll(new ExecuteSystemCommand().execute("tshark -n -r " + work_folder + "/pcap_files/" + current_os + " -Tfields -e " + featureName + " -Y " + packetProtocol, false));
-            }
-
-            // Check if the feature is null
-            // Get unique entries
-            ArrayList<String> listDistinct = (ArrayList<String>) output.stream().distinct().collect(Collectors.toList());
-
-            if (listDistinct.size() > 1) { // if the outputs are not all null, write the feature name to the file (selected feature)
-                if (current_field.split(",").length > 1) // Check if feature is hexadecimal
-                    write_to_file = true;
-                else {
-                    // Check if feature contains : ...
-                    boolean ignore = false;
-                    for (int i = 0; i < listDistinct.size(); i++) {
-                        if (listDistinct.get(i).contains(":")) {
-                            ignore = true;
-                            break;
-                        }
-                        else if ((listDistinct.get(i).length() - listDistinct.get(i).replace(".", "").length()) > 1) {
-                            ignore = true;
-                            break;
-                        }
-                    }
-
-                    if (!ignore)
-                        write_to_file = true;
-                }
-            }
-        }
-
-        if (write_to_file) {
-            synchronized(output_text) {
-                try {
-                    output_text.write(current_field);
-                    output_text.newLine();
-                    output_text.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        System.out.println(ANSI_BLUE + "Feature: " + ANSI_GREEN + featureName + ANSI_BLUE + " (" + pos_of_current_field + "/" + no_of_fields + ")" + ANSI_RESET);
-    }
-
-    public void start () {
-        if (t == null) {
-            t = new Thread (this, threadName);
-            t.start ();
-        }
-    }
-}
-
-class ExtractFeaturesThread extends Thread {
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_BLACK = "\u001B[30m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_BLUE = "\u001B[34m";
-    public static final String ANSI_PURPLE = "\u001B[35m";
-    public static final String ANSI_CYAN = "\u001B[36m";
-    public static final String ANSI_WHITE = "\u001B[37m";
-    private Thread t;
-    private String threadName;
-    private CountDownLatch latch;
-    private String current_class;
-    private String protocol_file_path;
-    private String tshark_attributes;
-    private String source_file;
-    private String pcap_file;
-    private String packetProtocol;
-    private boolean useDerivedFeatures;
-    private ArrayList<String> derivedFeaturesSuffixConsider;
-    private ArrayList<String> derivedFeaturesSuffixIgnore;
-    private ArrayList<String> derivedFeaturesSuffixInclude;
-
-    ExtractFeaturesThread(String packetProtocol, CountDownLatch latch, String current_class, String protocol_file_path, String tshark_attributes, String source_file, String pcap_file, boolean useDerivedFeatures, ArrayList<String> derivedFeaturesSuffixConsider, ArrayList<String> derivedFeaturesSuffixIgnore, ArrayList<String> derivedFeaturesSuffixInclude) {
-        this.latch = latch;
-        this.current_class = current_class;
-        this.protocol_file_path = protocol_file_path;
-        this.tshark_attributes = tshark_attributes;
-        this.source_file = source_file;
-        this.pcap_file = pcap_file;
-        this.packetProtocol = packetProtocol;
-        this.useDerivedFeatures = useDerivedFeatures;
-        this.derivedFeaturesSuffixConsider = derivedFeaturesSuffixConsider;
-        this.derivedFeaturesSuffixIgnore = derivedFeaturesSuffixIgnore;
-        this.derivedFeaturesSuffixInclude = derivedFeaturesSuffixInclude;
-        threadName = current_class;
-    }
-
-    public void run() {
-        new File(protocol_file_path).mkdirs(); // create a dedicated folder for the protocol
-
-        // Extract features
-        new OSExtractFeatures().extract(packetProtocol, tshark_attributes, source_file, pcap_file, current_class, useDerivedFeatures, derivedFeaturesSuffixConsider, derivedFeaturesSuffixIgnore, derivedFeaturesSuffixInclude);
-
-        // Remove repeated examples from each examples file
-        deleteDuplicates(source_file, source_file + "_uniq");
-
-        new File(source_file).delete();
-
-//        // Remove repeated examples from each examples file
-//        deleteDuplicates(source_file, source_file + "_temp");
-//        new File(source_file).delete();
-//        // Randomly sort the contents of the files
-//        sort_text_file(source_file + "_temp", source_file + "_uniq");
-//        new File(source_file + "_temp").delete();
-
-        System.out.println(ANSI_BLUE + "Class: " + ANSI_RED + current_class + ANSI_RESET);
-        latch.countDown();
-    }
-
-    public void start() {
-        if (t == null) {
-            t = new Thread (this, threadName);
-            t.start ();
-        }
-    }
-
-    // Deletes duplicate lines in a file
-    public void deleteDuplicates(String input_filename, String output_filename) {
-        try {
-            BufferedReader in = new BufferedReader(new FileReader(input_filename));
-            Set<String> lines = new LinkedHashSet<>();
-
-            for (String line; (line = in.readLine()) != null;)
-                lines.add(line); // does nothing if duplicate is already added
-
-            PrintWriter out = new PrintWriter(output_filename);
-
-            for (String line : lines)
-                out.println(line);
-
-            in.close();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void sortTextFile(String input, String output) {
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-
-        //Create an ArrayList object to hold the lines of input file
-        ArrayList<String> lines = new ArrayList<>();
-
-        try {
-            //Creating BufferedReader object to read the input file
-            reader = new BufferedReader(new FileReader(input));
-
-            //Reading all the lines of input file one by one and adding them into ArrayList
-            String currentLine = reader.readLine();
-
-            while (currentLine != null) {
-                lines.add(currentLine);
-                currentLine = reader.readLine();
-            }
-
-            // Sorting the ArrayList
-            Collections.sort(lines);
-
-            // Creating BufferedWriter object to write into output file
-            writer = new BufferedWriter(new FileWriter(output));
-
-            // Writing sorted lines into output file
-            for (String line : lines) {
-                writer.write(line);
-                writer.newLine();
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
-            //Closing the resources
-            try {
-                if (reader != null)
-                    reader.close();
-
-                if(writer != null)
-                    writer.close();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }
 

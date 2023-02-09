@@ -37,8 +37,6 @@ public class BuildModel {
             }
 
             reader.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

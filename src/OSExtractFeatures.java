@@ -4,9 +4,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 public class OSExtractFeatures {
-    public void extract(String protocol_filter, String tshark_attributes_input_file, String output_file, String pcap_file, String os, boolean useDerivedFeatures, ArrayList<String> derivedFeaturesSuffixConsider, ArrayList<String> derivedFeaturesSuffixIgnore, ArrayList<String> derivedFeaturesSuffixInclude) {
-        ArrayList<ArrayList<String>> contents = new ArrayList<>(); // Create contents array
-
+    public void extract(String protocol_filter, String protocol, String tshark_attributes_input_file, String output_file, String pcap_file, String os, boolean useDerivedFeatures, ArrayList<String> derivedFeaturesSuffixConsider, ArrayList<String> derivedFeaturesSuffixIgnore, ArrayList<String> derivedFeaturesSuffixInclude) {
         // Get attribute labels
         ArrayList<String> attribute_names = getAttributeLabels(tshark_attributes_input_file);
 
@@ -14,9 +12,12 @@ public class OSExtractFeatures {
         int no_of_attributes = attribute_names.size();
 
         String tshark_command_to_execute = "tshark -n -r " + pcap_file;
+        if (!protocol.equals("all"))
+            tshark_command_to_execute += " -Y 'frame.protocols contains \"" + protocol.split("_")[protocol.split("_").length-1] + "\"'";
+
         // if filtering for a specific protocol is needed
         if (protocol_filter != null)
-            tshark_command_to_execute += " -Y " + protocol_filter;
+            tshark_command_to_execute += " " + protocol_filter;
         tshark_command_to_execute += " -Tfields -e ";
 
         // Get number of packets
@@ -25,123 +26,129 @@ public class OSExtractFeatures {
         ///////////////////////////////////////
         // Read packet field data into array //
         ///////////////////////////////////////
+        ArrayList<String> content = null;
         for (int index = 0; index < no_of_attributes; index++) { // for each attribute
-            String header_name = attribute_names.get(index).split(",")[0];
+            try {
+                FileWriter writer = new FileWriter(output_file + "_" + index, false);
 
-            // skip if feature contains "__"
-            if (!header_name.contains("__")) {
-                // behavior-related features
-                if (header_name.split("_")[0].equals("stream")) {
-                    if (header_name.equals("stream_dst_no") || header_name.equals("stream_dst_cantor")) {
-                        // ip.dst.no (no of unique ases that the device communicates with)
-                        // ip.dst.cantor (cantor(multiplication) of the 2 most visited ases by the device)
-                        contents.add(streamASRelatedFeatures(tshark_command_to_execute, header_name));
+                String header_name = attribute_names.get(index).split(",")[0];
+
+                if (!header_name.contains("__")) { // skip if feature contains "__"
+                    // behavior-related features
+                    if (header_name.split("_")[0].equals("stream")) {
+                        switch (header_name) {
+                            case "stream_dst_no":
+                            case "stream_dst_cantor":
+                                // ip.dst.no (no of unique ases that the device communicates with)
+                                // ip.dst.cantor (cantor(multiplication) of the 2 most visited ases by the device)
+                                content = streamASRelatedFeatures(tshark_command_to_execute, header_name);
+                                for (int i = 0; i < content.size(); i++) {
+                                    writer.write(content.get(i) + "\n");
+                                    writer.flush();
+                                }
+                                break;
+                            case "stream_synfin":
+                                // number of packets between tcp syn and fin packets in the device
+                                content = streamSynFinFeatures(pcap_file, no_of_packets);
+                                for (int i = 0; i < content.size(); i++) {
+                                    writer.write(content.get(i) + "\n");
+                                    writer.flush();
+                                }
+                                break;
+                            case "stream_iat":
+                                // inter-arrival-time of packets
+                                content = streamIatFeatures(tshark_command_to_execute, header_name);
+                                for (int i = 0; i < content.size(); i++) {
+                                    writer.write(content.get(i) + "\n");
+                                    writer.flush();
+                                }
+                                break;
+                            case "stream_synfintime":
+                                // time between tcp syn and fin packets in the device
+                                content = streamSynFinTimeFeatures(tshark_command_to_execute, no_of_packets);
+                                for (int i = 0; i < content.size(); i++) {
+                                    writer.write(content.get(i) + "\n");
+                                    writer.flush();
+                                }
+                                break;
+                            case "stream_packetlength":
+                                // packet size
+                                content = streamPacketLengthFeatures(tshark_command_to_execute, header_name);
+                                for (int i = 0; i < content.size(); i++) {
+                                    writer.write(content.get(i) + "\n");
+                                    writer.flush();
+                                }
+                                break;
+                        }
                     }
-                    else if (header_name.equals("stream_synfin")) {
-                        // number of packets between tcp syn and fin packets in the device
-                        contents.add(streamSynFinFeatures(pcap_file, no_of_packets));
+                    else {
+                        // non-behavior-related features
+                        content = nonStreamFeatures(tshark_command_to_execute, header_name, attribute_names, index);
+                        for (int i = 0; i < content.size(); i++) {
+                            writer.write(content.get(i) + "\n");
+                            writer.flush();
+                        }
                     }
-                    else if (header_name.equals("stream_iat")) {
-                        // inter-arrival-time of packets
-                        contents.add(streamIatFeatures(tshark_command_to_execute, header_name));
-                    }
-                    else if (header_name.equals("stream_synfintime")) {
-                        // time between tcp syn and fin packets in the device
-                        contents.add(streamSynFinTimeFeatures(tshark_command_to_execute, no_of_packets));
-                    }
-                    else if (header_name.equals("stream_packetlength")) {
-                        // packet size
-                        contents.add(streamPacketLengthFeatures(tshark_command_to_execute, header_name));
+
+                    // generate derived features
+                    if (useDerivedFeatures && !derivedFeaturesSuffixIgnore.contains(header_name)) {
+                        DerivedFeature values = getDerivedFeatures(content);
+
+                        if (derivedFeaturesSuffixInclude.contains(header_name))
+                            for (int i = 0; i < content.size(); i++)
+                                content.set(i, "?");
+
+                        for (int i = 0; i < derivedFeaturesSuffixConsider.size(); i++) {
+                            ArrayList<String> contentToAdd = new ArrayList<>();
+                            switch (derivedFeaturesSuffixConsider.get(i)) {
+                                case "min":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(Double.toString(values.min));
+                                    break;
+                                case "median":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(Double.toString(values.median));
+                                    break;
+                                case "mean":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(values.mean);
+                                    break;
+                                case "max":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(Double.toString(values.max));
+                                    break;
+                                case "mostcommon":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(Double.toString(values.mostcommon));
+                                    break;
+                                case "variance":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(values.variance);
+                                    break;
+                                case "interquartile":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(Double.toString(values.interquartile));
+                                    break;
+                                case "stddeviation":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(values.stddeviation);
+                                    break;
+                                case "uniquecount":
+                                    for (int j = 0; j < content.size(); j++)
+                                        contentToAdd.add(Integer.toString(values.uniquecount));
+                                    break;
+                            }
+                            for (int j = 0; j < contentToAdd.size(); j++) {
+                                writer.write(contentToAdd.get(j) + "\n");
+                                writer.flush();
+                            }
+                        }
                     }
                 }
-                else {
-                    // non-behavior-related features
-                    contents.add(nonStreamFeatures(tshark_command_to_execute, header_name, attribute_names, index));
-                }
 
-                ArrayList<String> content = contents.get(contents.size()-1); // get the recently added item
-
-                // generate derived features
-                if (useDerivedFeatures && !derivedFeaturesSuffixIgnore.contains(header_name)) {
-                    DerivedFeature values = getDerivedFeatures(content);
-
-                    if (derivedFeaturesSuffixInclude.contains(header_name))
-                        for (int i = 0; i < content.size(); i++)
-                            content.set(i, "?");
-
-                    for (int i = 0; i < derivedFeaturesSuffixConsider.size(); i++) {
-                        ArrayList<String> contentToAdd = new ArrayList<>();
-                        if (derivedFeaturesSuffixConsider.get(i).equals("min")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(Double.toString(values.min));
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("median")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(Double.toString(values.median));
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("mean")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(values.mean);
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("max")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(Double.toString(values.max));
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("mostcommon")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(Double.toString(values.mostcommon));
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("variance")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(values.variance);
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("interquartile")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(Double.toString(values.interquartile));
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("stddeviation")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(values.stddeviation);
-                        }
-                        else if (derivedFeaturesSuffixConsider.get(i).equals("uniquecount")) {
-                            for (int j = 0; j < content.size(); j++)
-                                contentToAdd.add(Integer.toString(values.uniquecount));
-                        }
-                        contents.add(contentToAdd);
-                    }
-                }
-            }
-        }
-
-        if (no_of_attributes != contents.size()) {
-            System.out.println("Size doesn't match!!!");
-            System.exit(0);
-        }
-
-        // Add classes
-        ArrayList<String> classes_append = new ArrayList<>();
-        for (int j = 0; j < contents.get(0).size(); j++)
-            classes_append.add(os.split("_")[0]);
-        contents.add(classes_append);
-
-        /////////////////////////
-        // Remove null records //
-        /////////////////////////
-        for (int i = 0; i < contents.get(0).size(); i++) { // for each record
-            int no_of_null = 0;
-
-            for (int j = 0; j < (contents.size()-1); j++) // for each column (-1 to ignore class column)
-
-                if (contents.get(j).get(i).equals("?"))
-                    no_of_null++;
-
-            if (no_of_null == no_of_attributes) { // remove null records
-                for (int k = 0; k < contents.size(); k++) {
-                    ArrayList<String> temp = contents.get(k);
-                    temp.remove(i);
-                    contents.set(k, temp);
-                }
-                i--;
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
@@ -151,24 +158,37 @@ public class OSExtractFeatures {
 
         // Write the records to file
         try {
-            FileWriter writer2 = new FileWriter(output_file, false);
+            FileWriter writer = new FileWriter(output_file, false);
+            ArrayList<BufferedReader> reader = new ArrayList<>();
+            for (int index = 0; index < no_of_attributes; index++) // for each attribute
+                reader.add(new BufferedReader(new FileReader(output_file + "_" + index)));
 
-            for (int i = 0; i < contents.get(0).size(); i++) { // for each record
+            for (int i = 0; i < content.size(); i++) { // for each record
+                int noOfNullColumns = 0;
                 String output = "";
+                for (int index = 0; index < no_of_attributes; index++) { // for each attribute
+                    String line = reader.get(index).readLine();
+                    output += line + ",";
 
-                // Prepare the record to be put to the file
-                for (int j = 0; j < contents.size(); j++) { // for each column
-                    String item = contents.get(j).get(i);
-                    output = output + "," + item;
+                    if (line.equals("?"))
+                        noOfNullColumns++;
                 }
 
-                output = output.substring(1); // remove the first comma
-
-                writer2.write(output + "\n");
-                writer2.flush();
+                if (noOfNullColumns < no_of_attributes) { // only write if not a null record
+                    writer.write(output);
+                    writer.flush();
+                    writer.write(os.split("_")[0] + "\n");
+                    writer.flush();
+                }
             }
 
-            writer2.close();
+            for (int index = 0; index < no_of_attributes; index++) // for each attribute
+                reader.get(index).close();
+
+            for (int index = 0; index < no_of_attributes; index++) // for each attribute
+                new File(output_file + "_" + index).delete();
+
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -367,11 +387,11 @@ public class OSExtractFeatures {
     public static ArrayList<String> nonStreamFeatures(String tshark_command_to_execute, String header_name, ArrayList<String> attribute_names, int index) {
         ArrayList<String> content = new ExecuteSystemCommand().execute(tshark_command_to_execute + header_name, true); // run tshark and get the output
 
-        // check if output of tshark is empty
-        if (content.size() == 0) {
-            System.out.printf(header_name + " is empty!");
-            System.exit(0);
-        }
+//        // check if output of tshark is empty
+//        if (content.size() == 0) {
+//            System.out.printf(header_name + " is empty!");
+//            System.exit(0);
+//        }
 
         //////////////////////////////////////////////////////////////////
         // Fix items in arraylist (e.g. remove commas, convert hexa...) //

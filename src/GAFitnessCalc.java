@@ -21,7 +21,7 @@ public class GAFitnessCalc {
         ////////////////
         // Parameters //
         ////////////////
-        BufferedReader reader;
+        BufferedReader reader = null;
         int no_of_features = individual.size();
         int no_of_features_selected = 0;
         double overall_performance_sum = 0;
@@ -56,10 +56,14 @@ public class GAFitnessCalc {
                             count++;
                             break;
                         }
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } finally {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
 

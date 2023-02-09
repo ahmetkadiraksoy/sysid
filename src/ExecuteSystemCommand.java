@@ -7,7 +7,8 @@ public class ExecuteSystemCommand {
         ArrayList<String> output = new ArrayList<>();
         String line;
         try {
-            Process p = Runtime.getRuntime().exec(cmdLine);
+            ProcessBuilder pb = new ProcessBuilder(new String[]{"sh", "-c", cmdLine});
+            Process p = pb.start();
             BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
             while ((line = input.readLine()) != null) {
                 if (!parse)
